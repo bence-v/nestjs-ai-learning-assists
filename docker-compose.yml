@@ -1,0 +1,44 @@
+name: ai-learning
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: rootpassword
+      POSTGRES_DB: ai_learning
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - '8000:3000'
+    environment:
+      - DATABASE_URL=postgresql://root:rootpassword@postgres:5432/ai_learning?schema=public
+      - JWT_SECRET=password
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      - postgres
+    command: sh -c "npx prisma generate && npx prisma db push && npm run start:dev"
+
+  frontend:
+    build: ./frontend/ai-learning-assistant
+    ports:
+      - '3000:3000'
+      - '5173:5173'
+    volumes:
+      - ./frontend/ai-learning-assistant:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  logs:

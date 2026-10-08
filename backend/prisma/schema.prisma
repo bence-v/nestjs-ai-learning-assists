@@ -1,0 +1,153 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            Int           @id @default(autoincrement())
+  username      String        @unique
+  email         String        @unique
+  password      String
+  profileImage  String?
+  updatedAt     DateTime      @updatedAt
+  createdAt     DateTime      @default(now())
+  documents     Document[]
+  chatHistories ChatHistory[]
+  quizzes       Quiz[]
+  flashcards    Flashcard[]
+}
+
+model Document {
+  id            Int           @id @default(autoincrement())
+  user          User          @relation(fields: [userId], references: [id])
+  userId        Int
+  title         String
+  fileName      String
+  filePath      String
+  fileSize      String
+  extractedText String        @default("")
+  uploadDate    DateTime      @updatedAt
+  lastAccessed  DateTime      @default(now())
+  status        Status
+  chunks        Chunk[]
+  chatHistories ChatHistory[]
+  quizzes       Quiz[]
+  flashcards    Flashcard[]
+  updatedAt     DateTime      @updatedAt
+  createdAt     DateTime      @default(now())
+}
+
+model ChatHistory {
+  id         Int       @id @default(autoincrement())
+  user       User      @relation(fields: [userId], references: [id])
+  userId     Int
+  document   Document  @relation(fields: [documentId], references: [id])
+  documentId Int
+  messages   Message[]
+  updatedAt  DateTime  @updatedAt
+  createdAt  DateTime  @default(now())
+}
+
+model Message {
+  id             Int          @id @default(autoincrement())
+  role           ChatRole
+  content        String
+  createdAt      DateTime     @default(now())
+  relevantChunks Int[]
+  chatHistory    ChatHistory? @relation(fields: [chatHistoryId], references: [id])
+  chatHistoryId  Int?
+}
+
+model Question {
+  id            Int        @id @default(autoincrement())
+  question      String
+  options       String[]
+  correctAnswer String
+  explanation   String
+  difficulty    Difficulty @default(medium)
+  quiz          Quiz?      @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  quizId        Int?
+}
+
+model UserAnswers {
+  id             Int      @id @default(autoincrement())
+  questionIndex  Int
+  selectedAnswer String
+  isCorrect      Boolean
+  answeredAt     DateTime @default(now())
+  quiz           Quiz?    @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  quizId         Int?
+}
+
+model Quiz {
+  id             Int           @id @default(autoincrement())
+  user           User          @relation(fields: [userId], references: [id])
+  userId         Int
+  document       Document      @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  documentId     Int
+  title          String
+  questions      Question[]
+  userAnswers    UserAnswers[]
+  score          Int
+  totalQuestions Int
+  completedAt    DateTime?
+  updatedAt      DateTime      @updatedAt
+  createdAt      DateTime      @default(now())
+}
+
+model Flashcard {
+  id         Int      @id @default(autoincrement())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     Int
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  documentId Int
+  cards      Card[]
+  updatedAt  DateTime @updatedAt
+  createdAt  DateTime @default(now())
+}
+
+model Card {
+  id           Int        @id @default(autoincrement())
+  question     String
+  answer       String
+  difficulty   Difficulty @default(medium)
+  lastReviewed DateTime?
+  reviewCount  Int        @default(0)
+  isStarred    Boolean    @default(false)
+  flashcard    Flashcard? @relation(fields: [flashcardId], references: [id], onDelete: Cascade)
+  flashcardId  Int?
+}
+
+model Chunk {
+  id         Int       @id @default(autoincrement())
+  content    String
+  pageNumber Int       @default(0)
+  chunkIndex Int
+  document   Document? @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  documentId Int?
+}
+
+enum Difficulty {
+  easy
+  medium
+  hard
+}
+
+enum ChatRole {
+  user
+  assistant
+}
+
+enum Status {
+  processing
+  ready
+  failed
+}
