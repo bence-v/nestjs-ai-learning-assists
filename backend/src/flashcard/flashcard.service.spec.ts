@@ -5,7 +5,6 @@ import { NotFoundException, ForbiddenException } from '@nestjs/common';
 
 describe('FlashcardService', () => {
   let service: FlashcardService;
-  let databaseService: DatabaseService;
 
   const mockDatabaseService = {
     flashcard: {
@@ -31,7 +30,6 @@ describe('FlashcardService', () => {
     }).compile();
 
     service = module.get<FlashcardService>(FlashcardService);
-    databaseService = module.get<DatabaseService>(DatabaseService);
   });
 
   afterEach(() => {

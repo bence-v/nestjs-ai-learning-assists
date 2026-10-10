@@ -17,7 +17,6 @@ jest.mock('../utils/pdfParser', () => ({
 
 describe('DocumentService', () => {
   let service: DocumentService;
-  let databaseService: DatabaseService;
 
   const mockDatabaseService = {
     document: {
@@ -40,7 +39,6 @@ describe('DocumentService', () => {
     }).compile();
 
     service = module.get<DocumentService>(DocumentService);
-    databaseService = module.get<DatabaseService>(DatabaseService);
 
     jest.spyOn(console, 'log').mockImplementation(() => {});
     jest.spyOn(console, 'warn').mockImplementation(() => {});

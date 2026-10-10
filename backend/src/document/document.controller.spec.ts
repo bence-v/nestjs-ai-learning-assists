@@ -6,8 +6,6 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 describe('DocumentController', () => {
   let controller: DocumentController;
-  let documentService: DocumentService;
-  let databaseService: DatabaseService;
 
   const mockDocumentService = {
     uploadDocument: jest.fn(),
@@ -41,8 +39,6 @@ describe('DocumentController', () => {
       .compile();
 
     controller = module.get<DocumentController>(DocumentController);
-    documentService = module.get<DocumentService>(DocumentService);
-    databaseService = module.get<DatabaseService>(DatabaseService);
   });
 
   afterEach(() => {

@@ -24,8 +24,7 @@ jest.mock('../utils/textChunker', () => ({
 
 describe('AiService', () => {
   let service: AiService;
-  let databaseService: DatabaseService;
- 
+
   const mockDatabaseService = {
     document: {
       findUnique: jest.fn(),
@@ -55,7 +54,6 @@ describe('AiService', () => {
     }).compile();
 
     service = module.get<AiService>(AiService);
-    databaseService = module.get<DatabaseService>(DatabaseService);
   });
 
   afterEach(() => {

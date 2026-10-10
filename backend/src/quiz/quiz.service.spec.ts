@@ -7,7 +7,6 @@ import { SubmitUserAnswerInput } from './dto/submitUserAnswerInput';
 describe('QuizService', () => {
   let service: QuizService;
 
-
   const mockDatabaseService = {
     quiz: {
       findMany: jest.fn(),

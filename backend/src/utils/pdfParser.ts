@@ -6,6 +6,9 @@ export interface PdfProcessResult {
   text: string;
   chunks: NewChunk[];
 }
+interface PdfParseResult {
+  text: string;
+}
 
 /**
  * Extract text from PDF file
@@ -15,7 +18,11 @@ export interface PdfProcessResult {
 const extractTextFromPDF = async (filePath: string): Promise<string> => {
   try {
     const dataBuffer = await fs.readFile(filePath);
-    const data = await (pdfParse as any)(dataBuffer);
+
+    const parse = pdfParse as unknown as (
+      buffer: Buffer,
+    ) => Promise<PdfParseResult>;
+    const data = await parse(dataBuffer);
 
     return data.text;
   } catch (error) {

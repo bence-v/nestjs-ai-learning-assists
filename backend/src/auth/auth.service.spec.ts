@@ -9,8 +9,7 @@ jest.mock('bcrypt');
 
 describe('AuthService', () => {
   let service: AuthService;
-  let databaseService: DatabaseService;
-  
+
   const mockDatabaseService = {
     user: {
       update: jest.fn(),
@@ -40,7 +39,6 @@ describe('AuthService', () => {
     }).compile();
 
     service = module.get<AuthService>(AuthService);
-    databaseService = module.get<DatabaseService>(DatabaseService);
   });
 
   afterEach(() => {
