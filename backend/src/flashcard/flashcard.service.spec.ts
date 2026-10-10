@@ -62,7 +62,10 @@ describe('FlashcardService', () => {
   describe('getAllFlashcardSets', () => {
     it('should return all flashcard sets for a specific user', async () => {
       const userId = 1;
-      const mockFlashcards = [{ id: 1, userId: 1 }, { id: 2, userId: 1 }];
+      const mockFlashcards = [
+        { id: 1, userId: 1 },
+        { id: 2, userId: 1 },
+      ];
 
       mockDatabaseService.flashcard.findMany.mockResolvedValue(mockFlashcards);
 
@@ -87,7 +90,7 @@ describe('FlashcardService', () => {
       mockDatabaseService.card.findFirst.mockResolvedValue(null);
 
       await expect(service.reviewFlashcard(cardId, userId)).rejects.toThrow(
-        new NotFoundException('Flashcard set or card not found.')
+        new NotFoundException('Flashcard set or card not found.'),
       );
 
       expect(mockDatabaseService.card.update).not.toHaveBeenCalled();
@@ -103,7 +106,7 @@ describe('FlashcardService', () => {
       expect(mockDatabaseService.card.update).toHaveBeenCalledWith({
         where: { id: cardId },
         data: {
-          lastReviewed: expect.any(Date),
+          lastReviewed: expect.any(Date) as Date,
           reviewCount: { increment: 1 },
         },
       });
@@ -124,7 +127,7 @@ describe('FlashcardService', () => {
       mockDatabaseService.card.findFirst.mockResolvedValue(null);
 
       await expect(service.toggleStarFlashcard(cardId, userId)).rejects.toThrow(
-        new NotFoundException('Flashcard set or card not found.')
+        new NotFoundException('Flashcard set or card not found.'),
       );
     });
 
@@ -135,7 +138,9 @@ describe('FlashcardService', () => {
 
       mockDatabaseService.card.findFirst.mockResolvedValue(mockCard);
       mockDatabaseService.card.update.mockResolvedValue(updatedCard);
-      mockDatabaseService.flashcard.findUnique.mockResolvedValue(updatedFlashcardSet);
+      mockDatabaseService.flashcard.findUnique.mockResolvedValue(
+        updatedFlashcardSet,
+      );
 
       const result = await service.toggleStarFlashcard(cardId, userId);
 
@@ -158,7 +163,9 @@ describe('FlashcardService', () => {
 
       mockDatabaseService.card.findFirst.mockResolvedValue(mockCard);
       mockDatabaseService.card.update.mockResolvedValue(updatedCard);
-      mockDatabaseService.flashcard.findUnique.mockResolvedValue(updatedFlashcardSet);
+      mockDatabaseService.flashcard.findUnique.mockResolvedValue(
+        updatedFlashcardSet,
+      );
 
       const result = await service.toggleStarFlashcard(cardId, userId);
 
@@ -173,8 +180,10 @@ describe('FlashcardService', () => {
     it('should throw NotFoundException if flashcard set is not found', async () => {
       mockDatabaseService.flashcard.findUnique.mockResolvedValue(null);
 
-      await expect(service.deleteFlashcardSet(flashcardId, userId)).rejects.toThrow(
-        new NotFoundException('The flashcard set was not found!')
+      await expect(
+        service.deleteFlashcardSet(flashcardId, userId),
+      ).rejects.toThrow(
+        new NotFoundException('The flashcard set was not found!'),
       );
     });
 
@@ -182,8 +191,12 @@ describe('FlashcardService', () => {
       const mockFlashcard = { id: flashcardId, userId: 99 };
       mockDatabaseService.flashcard.findUnique.mockResolvedValue(mockFlashcard);
 
-      await expect(service.deleteFlashcardSet(flashcardId, userId)).rejects.toThrow(
-        new ForbiddenException('You do not have permission to delete this set!')
+      await expect(
+        service.deleteFlashcardSet(flashcardId, userId),
+      ).rejects.toThrow(
+        new ForbiddenException(
+          'You do not have permission to delete this set!',
+        ),
       );
 
       expect(mockDatabaseService.flashcard.delete).not.toHaveBeenCalled();

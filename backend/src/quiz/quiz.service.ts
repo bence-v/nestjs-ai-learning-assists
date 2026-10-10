@@ -5,6 +5,8 @@ import {
 } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { Prisma } from '@prisma/client';
+import { SubmitUserAnswerInput } from './dto/submitUserAnswerInput';
+
 @Injectable()
 export class QuizService {
   constructor(private readonly databaseService: DatabaseService) {}
@@ -57,7 +59,7 @@ export class QuizService {
   }
 
   async submitQuiz(
-    answers: Prisma.UserAnswersCreateWithoutQuizInput[],
+    answers: SubmitUserAnswerInput[],
     quizId: number,
     userId: number,
   ) {

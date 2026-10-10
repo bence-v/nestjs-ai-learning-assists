@@ -9,15 +9,13 @@ describe('DocumentController', () => {
   let documentService: DocumentService;
   let databaseService: DatabaseService;
 
-  // 1. Mockoljuk a DocumentService-t
   const mockDocumentService = {
-    uploadDocument: jest.fn(), // Ez a háttérben fut (void)
+    uploadDocument: jest.fn(),
     getDocuments: jest.fn(),
     getDocument: jest.fn(),
     deleteDocument: jest.fn(),
   };
 
-  // 2. Mockoljuk a DatabaseService-t (a Controller használja a create-et az uploadnál)
   const mockDatabaseService = {
     document: {
       create: jest.fn(),
@@ -38,7 +36,6 @@ describe('DocumentController', () => {
         },
       ],
     })
-      // Felülbíráljuk a JWT Guardot, hogy engedjen be minket
       .overrideGuard(JwtAuthGuard)
       .useValue({ canActivate: () => true })
       .compile();
@@ -59,8 +56,7 @@ describe('DocumentController', () => {
     it('should create a document in DB and trigger background processing', async () => {
       const userId = 1;
       const title = 'My Uploaded PDF';
-      
-      // Fake Multer File objektum
+
       const mockFile = {
         path: 'uploads/documents/test.pdf',
         originalname: 'test.pdf',
@@ -76,30 +72,28 @@ describe('DocumentController', () => {
         status: 'processing',
       };
 
-      // Az adatbázis visszaadja a létrehozott "processing" állapotú fájlt
-      mockDatabaseService.document.create.mockResolvedValue(expectedNewDocument);
+      mockDatabaseService.document.create.mockResolvedValue(
+        expectedNewDocument,
+      );
 
       const result = await controller.uploadDocument(mockFile, title, userId);
 
-      // 1. Jó adatokkal hozta létre a fájlt az adatbázisban?
       expect(mockDatabaseService.document.create).toHaveBeenCalledWith({
         data: {
           userId,
           filePath: mockFile.path,
           fileName: mockFile.originalname,
-          fileSize: '1024', // A kódodban stringgé van konvertálva
+          fileSize: '1024',
           title: title,
           status: 'processing',
         },
       });
 
-      // 2. Elindította a háttérfolyamatot a megfelelő ID-val és útvonallal?
       expect(mockDocumentService.uploadDocument).toHaveBeenCalledWith(
         expectedNewDocument.id,
         mockFile.path,
       );
 
-      // 3. Megfelelő a válasz?
       expect(result).toEqual({
         success: true,
         message: 'File uploaded! File being processed in background...',
@@ -115,7 +109,6 @@ describe('DocumentController', () => {
     it('should fetch documents and format the _count property properly', async () => {
       const userId = 1;
 
-      // A DocumentService nyersen adja vissza az adatot a _count-tal
       const rawDocuments = [
         {
           id: 100,
@@ -135,7 +128,6 @@ describe('DocumentController', () => {
 
       expect(mockDocumentService.getDocuments).toHaveBeenCalledWith(userId);
 
-      // Ellenőrizzük, hogy a map() függvény a Controllerben jól végezte-e a dolgát
       expect(result).toEqual([
         { id: 100, title: 'Doc 1', flashcardCount: 5, quizCount: 2 },
         { id: 101, title: 'Doc 2', flashcardCount: 0, quizCount: 0 },
@@ -151,7 +143,6 @@ describe('DocumentController', () => {
       const documentId = 100;
       const userId = 1;
 
-      // Itt a DocumentService már a "lapított" verziót adja vissza (ahogy megírtad)
       const mockFormattedDocument = {
         id: documentId,
         title: 'Single Doc',
@@ -163,7 +154,10 @@ describe('DocumentController', () => {
 
       const result = await controller.getDocument(documentId, userId);
 
-      expect(mockDocumentService.getDocument).toHaveBeenCalledWith(documentId, userId);
+      expect(mockDocumentService.getDocument).toHaveBeenCalledWith(
+        documentId,
+        userId,
+      );
       expect(result).toEqual({
         success: true,
         data: mockFormattedDocument,
@@ -182,10 +176,12 @@ describe('DocumentController', () => {
 
       mockDocumentService.deleteDocument.mockResolvedValue(mockDeleteResult);
 
-      // (Feltételezzük, hogy kijavítottad a controllert a @Param és @GetUser használatára)
       const result = await controller.deleteDocument(documentId, userId);
 
-      expect(mockDocumentService.deleteDocument).toHaveBeenCalledWith(documentId, userId);
+      expect(mockDocumentService.deleteDocument).toHaveBeenCalledWith(
+        documentId,
+        userId,
+      );
       expect(result).toEqual(mockDeleteResult);
     });
   });

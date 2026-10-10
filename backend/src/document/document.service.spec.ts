@@ -55,13 +55,14 @@ describe('DocumentService', () => {
     const filePath = 'uploads/test.pdf';
 
     it('should successfully parse PDF and update document status to "ready"', async () => {
-
       const mockParsedData = {
         text: 'Extracted PDF text',
         chunks: [{ content: 'Chunk 1', chunkIndex: 1, pageNumber: 1 }],
       };
 
-      (PDFHelpers.parseAndChunkPDF as jest.Mock).mockResolvedValue(mockParsedData);
+      (PDFHelpers.parseAndChunkPDF as jest.Mock).mockResolvedValue(
+        mockParsedData,
+      );
       mockDatabaseService.document.update.mockResolvedValue({});
 
       await service.uploadDocument(documentId, filePath);
@@ -80,8 +81,9 @@ describe('DocumentService', () => {
     });
 
     it('should handle PDF parsing failure and update document status to "failed"', async () => {
-
-      (PDFHelpers.parseAndChunkPDF as jest.Mock).mockRejectedValue(new Error('PDF error'));
+      (PDFHelpers.parseAndChunkPDF as jest.Mock).mockRejectedValue(
+        new Error('PDF error'),
+      );
       mockDatabaseService.document.update.mockResolvedValue({});
 
       await service.uploadDocument(documentId, filePath);
@@ -118,7 +120,6 @@ describe('DocumentService', () => {
     });
   });
 
-
   describe('getDocument', () => {
     const userId = 1;
     const documentId = 100;
@@ -127,7 +128,7 @@ describe('DocumentService', () => {
       mockDatabaseService.document.findUnique.mockResolvedValue(null);
 
       await expect(service.getDocument(documentId, userId)).rejects.toThrow(
-        new NotFoundException('Document was not found or not ready.')
+        new NotFoundException('Document was not found or not ready.'),
       );
     });
 
@@ -145,7 +146,7 @@ describe('DocumentService', () => {
 
       expect(mockDatabaseService.document.update).toHaveBeenCalledWith({
         where: { id: documentId, userId },
-        data: { lastAccessed: expect.any(Date) },
+        data: { lastAccessed: expect.any(Date) as Date },
       });
 
       expect(result).toEqual({
@@ -166,12 +167,15 @@ describe('DocumentService', () => {
       mockDatabaseService.document.findUnique.mockResolvedValue(null);
 
       await expect(service.deleteDocument(documentId, userId)).rejects.toThrow(
-        new NotFoundException('Document was not found.')
+        new NotFoundException('Document was not found.'),
       );
     });
 
     it('should successfully delete the file and the document from DB', async () => {
-      mockDatabaseService.document.findUnique.mockResolvedValue({ id: documentId, filePath });
+      mockDatabaseService.document.findUnique.mockResolvedValue({
+        id: documentId,
+        filePath,
+      });
       (fs.unlink as jest.Mock).mockResolvedValue(undefined); // A fájl törlése sikeres
 
       const result = await service.deleteDocument(documentId, userId);
@@ -189,9 +193,11 @@ describe('DocumentService', () => {
     });
 
     it('should proceed to delete from DB EVEN IF file unlinking fails (e.g., file missing)', async () => {
+      mockDatabaseService.document.findUnique.mockResolvedValue({
+        id: documentId,
+        filePath,
+      });
 
-      mockDatabaseService.document.findUnique.mockResolvedValue({ id: documentId, filePath });
-      
       (fs.unlink as jest.Mock).mockRejectedValue(new Error('File not found'));
 
       const result = await service.deleteDocument(documentId, userId);

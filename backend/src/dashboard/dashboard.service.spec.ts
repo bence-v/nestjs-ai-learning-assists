@@ -41,14 +41,13 @@ describe('DashboardService', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
-    jest.restoreAllMocks(); 
+    jest.restoreAllMocks();
   });
 
   describe('getDashboardStats', () => {
     const userId = 1;
 
     it('should return populated dashboard stats successfully', async () => {
-
       jest.spyOn(Math, 'random').mockReturnValue(0.5);
 
       mockDatabaseService.document.count.mockResolvedValue(10);
@@ -65,14 +64,18 @@ describe('DashboardService', () => {
       });
 
       const mockRecentDocuments = [{ id: 1, title: 'Doc 1' }];
-      mockDatabaseService.document.findMany.mockResolvedValue(mockRecentDocuments);
+      mockDatabaseService.document.findMany.mockResolvedValue(
+        mockRecentDocuments,
+      );
 
       const mockRecentQuizzes = [{ id: 1, title: 'Quiz 1', score: 90 }];
       mockDatabaseService.quiz.findMany.mockResolvedValue(mockRecentQuizzes);
 
       const result = await service.getDashboardStats(userId);
 
-      expect(mockDatabaseService.document.count).toHaveBeenCalledWith({ where: { userId } });
+      expect(mockDatabaseService.document.count).toHaveBeenCalledWith({
+        where: { userId },
+      });
       expect(mockDatabaseService.quiz.aggregate).toHaveBeenCalledWith({
         where: { userId, completedAt: { not: null } },
         _avg: { score: true },

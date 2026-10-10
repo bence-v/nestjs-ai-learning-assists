@@ -118,8 +118,8 @@ const generateQuiz = async (
 
     for (const block of questionBlocks) {
       const lines = block.trim().split('\n');
+      const options: string[] = [];
       let question = '',
-        options: string[] = [],
         correctAnswer = '',
         explanation = '',
         difficulty = 'medium';

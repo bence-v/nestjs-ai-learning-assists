@@ -125,7 +125,10 @@ export class DocumentController {
     @Param('documentId') documentId: number,
     @GetUser('id') userId: number,
   ) {
-    const result = await this.documentService.deleteDocument(Number(documentId), userId);
+    const result = await this.documentService.deleteDocument(
+      Number(documentId),
+      userId,
+    );
     return result;
   }
 }

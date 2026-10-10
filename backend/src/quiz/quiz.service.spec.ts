@@ -2,10 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { QuizService } from './quiz.service';
 import { DatabaseService } from '../database/database.service';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { SubmitUserAnswerInput } from './dto/submitUserAnswerInput';
 
 describe('QuizService', () => {
   let service: QuizService;
-  let databaseService: DatabaseService;
+
 
   const mockDatabaseService = {
     quiz: {
@@ -28,7 +29,6 @@ describe('QuizService', () => {
     }).compile();
 
     service = module.get<QuizService>(QuizService);
-    databaseService = module.get<DatabaseService>(DatabaseService);
   });
 
   afterEach(() => {
@@ -69,7 +69,7 @@ describe('QuizService', () => {
       mockDatabaseService.quiz.findFirst.mockResolvedValue(null);
 
       await expect(service.getQuizById(quizId, userId)).rejects.toThrow(
-        new NotFoundException('Quiz was not found.')
+        new NotFoundException('Quiz was not found.'),
       );
     });
 
@@ -107,7 +107,7 @@ describe('QuizService', () => {
     it('should throw NotFoundException if quiz does not exist', async () => {
       mockDatabaseService.quiz.findFirst.mockResolvedValue(null);
       await expect(service.submitQuiz([], quizId, userId)).rejects.toThrow(
-        new NotFoundException('Quiz not found.')
+        new NotFoundException('Quiz not found.'),
       );
     });
 
@@ -118,7 +118,7 @@ describe('QuizService', () => {
       });
 
       await expect(service.submitQuiz([], quizId, userId)).rejects.toThrow(
-        new BadRequestException('Quiz already completed.')
+        new BadRequestException('Quiz already completed.'),
       );
     });
 
@@ -126,11 +126,11 @@ describe('QuizService', () => {
       mockDatabaseService.quiz.findFirst.mockResolvedValue(mockQuiz);
       mockDatabaseService.quiz.update.mockResolvedValue({});
 
-      const userAnswers = [
+      const userAnswers: SubmitUserAnswerInput[] = [
         { questionIndex: 0, selectedAnswer: 'A' },
         { questionIndex: 1, selectedAnswer: 'B' },
         { questionIndex: 2, selectedAnswer: 'D' },
-      ] as any;
+      ];
 
       const result = await service.submitQuiz(userAnswers, quizId, userId);
 
@@ -140,12 +140,27 @@ describe('QuizService', () => {
         where: { id: quizId },
         data: {
           score: expectedScore,
-          completedAt: expect.any(Date),
+          completedAt: expect.any(Date) as Date,
           userAnswers: {
             create: [
-              { questionIndex: 0, selectedAnswer: 'A', isCorrect: true, answeredAt: expect.any(Date) },
-              { questionIndex: 1, selectedAnswer: 'B', isCorrect: true, answeredAt: expect.any(Date) },
-              { questionIndex: 2, selectedAnswer: 'D', isCorrect: false, answeredAt: expect.any(Date) },
+              {
+                questionIndex: 0,
+                selectedAnswer: 'A',
+                isCorrect: true,
+                answeredAt: expect.any(Date) as Date,
+              },
+              {
+                questionIndex: 1,
+                selectedAnswer: 'B',
+                isCorrect: true,
+                answeredAt: expect.any(Date) as Date,
+              },
+              {
+                questionIndex: 2,
+                selectedAnswer: 'D',
+                isCorrect: false,
+                answeredAt: expect.any(Date) as Date,
+              },
             ],
           },
         },
@@ -164,7 +179,7 @@ describe('QuizService', () => {
     it('should throw NotFoundException if quiz is not found', async () => {
       mockDatabaseService.quiz.findFirst.mockResolvedValue(null);
       await expect(service.getQuizResults(quizId, userId)).rejects.toThrow(
-        new NotFoundException('Quiz not found.')
+        new NotFoundException('Quiz not found.'),
       );
     });
 
@@ -174,7 +189,7 @@ describe('QuizService', () => {
         completedAt: null,
       });
       await expect(service.getQuizResults(quizId, userId)).rejects.toThrow(
-        new BadRequestException('Quiz not completed.')
+        new BadRequestException('Quiz not completed.'),
       );
     });
 
@@ -187,8 +202,18 @@ describe('QuizService', () => {
         totalQuestions: 2,
         document: { title: 'Doc' },
         questions: [
-          { question: 'Q1?', options: ['A', 'B'], correctAnswer: 'A', explanation: 'Exp1' },
-          { question: 'Q2?', options: ['C', 'D'], correctAnswer: 'C', explanation: 'Exp2' },
+          {
+            question: 'Q1?',
+            options: ['A', 'B'],
+            correctAnswer: 'A',
+            explanation: 'Exp1',
+          },
+          {
+            question: 'Q2?',
+            options: ['C', 'D'],
+            correctAnswer: 'C',
+            explanation: 'Exp2',
+          },
         ],
         userAnswers: [
           { questionIndex: 0, selectedAnswer: 'A', isCorrect: true },
@@ -228,13 +253,16 @@ describe('QuizService', () => {
     it('should throw NotFoundException if quiz is not found', async () => {
       mockDatabaseService.quiz.findFirst.mockResolvedValue(null);
       await expect(service.deleteQuiz(quizId, userId)).rejects.toThrow(
-        new NotFoundException('Quiz was not found.')
+        new NotFoundException('Quiz was not found.'),
       );
       expect(mockDatabaseService.quiz.delete).not.toHaveBeenCalled();
     });
 
     it('should delete quiz successfully', async () => {
-      mockDatabaseService.quiz.findFirst.mockResolvedValue({ id: quizId, userId });
+      mockDatabaseService.quiz.findFirst.mockResolvedValue({
+        id: quizId,
+        userId,
+      });
       mockDatabaseService.quiz.delete.mockResolvedValue({});
 
       const result = await service.deleteQuiz(quizId, userId);

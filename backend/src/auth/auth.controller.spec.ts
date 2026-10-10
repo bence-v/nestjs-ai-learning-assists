@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
-import {AuthService} from "./auth.service";
-import {JwtAuthGuard} from "./jwt-auth.guard";
+import { AuthService } from './auth.service';
+import { JwtAuthGuard } from './jwt-auth.guard';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -30,9 +30,9 @@ describe('AuthController', () => {
         },
       ],
     })
-        .overrideGuard(JwtAuthGuard)
-        .useValue({ canActivate: () => true })
-        .compile();
+      .overrideGuard(JwtAuthGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
 
     controller = module.get<AuthController>(AuthController);
     service = module.get<AuthService>(AuthService);
@@ -42,8 +42,7 @@ describe('AuthController', () => {
     expect(controller).toBeDefined();
   });
 
-  it('should be defined', async () => {
-
+  it('should be defined', () => {
     const result = controller.getProfile(mockUser as any);
 
     expect(result).toEqual({ success: true, data: mockUser });

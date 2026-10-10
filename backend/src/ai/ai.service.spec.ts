@@ -3,7 +3,8 @@ import { AiService } from './ai.service';
 import { DatabaseService } from '../database/database.service';
 import { NotFoundException } from '@nestjs/common';
 import { geminiService } from '../utils/geminiService';
-import { textChunker} from "../utils/textChunker";
+import { textChunker } from '../utils/textChunker';
+import { GenerateQuizParams } from './params/GenerateQuizParams';
 
 jest.mock('../utils/geminiService', () => ({
   geminiService: {
@@ -24,7 +25,7 @@ jest.mock('../utils/textChunker', () => ({
 describe('AiService', () => {
   let service: AiService;
   let databaseService: DatabaseService;
-
+ 
   const mockDatabaseService = {
     document: {
       findUnique: jest.fn(),
@@ -98,7 +99,7 @@ describe('AiService', () => {
       mockDatabaseService.document.findUnique.mockResolvedValue(null);
 
       await expect(service.generateFlashcards(request, userId)).rejects.toThrow(
-          new NotFoundException('Document was not found or not ready.')
+        new NotFoundException('Document was not found or not ready.'),
       );
       expect(mockDatabaseService.document.findUnique).toHaveBeenCalledWith({
         where: { id: request.documentId, status: 'ready', userId },
@@ -109,18 +110,21 @@ describe('AiService', () => {
     });
 
     it('should successfully generate and save flashcards', async () => {
-
       mockDatabaseService.document.findUnique.mockResolvedValue(mockDocument);
 
-      (geminiService.generateFlashcards as jest.Mock).mockResolvedValue(mockedGeminiCards);
+      (geminiService.generateFlashcards as jest.Mock).mockResolvedValue(
+        mockedGeminiCards,
+      );
 
-      mockDatabaseService.flashcard.create.mockResolvedValue(mockCreatedFlashcardSet);
+      mockDatabaseService.flashcard.create.mockResolvedValue(
+        mockCreatedFlashcardSet,
+      );
 
       const result = await service.generateFlashcards(request, userId);
 
       expect(geminiService.generateFlashcards).toHaveBeenCalledWith(
-          mockDocument.extractedText,
-          request.count
+        mockDocument.extractedText,
+        request.count,
       );
 
       expect(mockDatabaseService.flashcard.create).toHaveBeenCalledWith({
@@ -184,7 +188,7 @@ describe('AiService', () => {
       mockDatabaseService.document.findUnique.mockResolvedValue(null);
 
       await expect(service.generateQuiz(request, userId)).rejects.toThrow(
-          new NotFoundException('Document was not found or not ready.')
+        new NotFoundException('Document was not found or not ready.'),
       );
 
       expect(mockDatabaseService.document.findUnique).toHaveBeenCalledWith({
@@ -197,14 +201,16 @@ describe('AiService', () => {
 
     it('should successfully generate and save a quiz WITH a provided title', async () => {
       mockDatabaseService.document.findUnique.mockResolvedValue(mockDocument);
-      (geminiService.generateQuiz as jest.Mock).mockResolvedValue(mockedGeminiQuestions);
+      (geminiService.generateQuiz as jest.Mock).mockResolvedValue(
+        mockedGeminiQuestions,
+      );
       mockDatabaseService.quiz.create.mockResolvedValue(mockCreatedQuiz);
 
       const result = await service.generateQuiz(request, userId);
 
       expect(geminiService.generateQuiz).toHaveBeenCalledWith(
-          mockDocument.extractedText,
-          request.numQuestions
+        mockDocument.extractedText,
+        request.numQuestions,
       );
 
       expect(mockDatabaseService.quiz.create).toHaveBeenCalledWith({
@@ -218,7 +224,12 @@ describe('AiService', () => {
             create: [
               {
                 question: 'Mi a sejtmag feladata?',
-                options: ['Energiatermelés', 'DNS tárolás', 'Mozgás', 'Emésztés'],
+                options: [
+                  'Energiatermelés',
+                  'DNS tárolás',
+                  'Mozgás',
+                  'Emésztés',
+                ],
                 correctAnswer: 'DNS tárolás',
                 explanation: 'A sejtmag tárolja a genetikai információt.',
                 difficulty: 'easy',
@@ -235,10 +246,12 @@ describe('AiService', () => {
       const requestWithoutTitle = {
         documentId: 100,
         numQuestions: 3,
-      };
+      } as GenerateQuizParams;
 
       mockDatabaseService.document.findUnique.mockResolvedValue(mockDocument);
-      (geminiService.generateQuiz as jest.Mock).mockResolvedValue(mockedGeminiQuestions);
+      (geminiService.generateQuiz as jest.Mock).mockResolvedValue(
+        mockedGeminiQuestions,
+      );
 
       const expectedFallbackTitle = `${mockDocument.title} - Quiz`;
       mockDatabaseService.quiz.create.mockResolvedValue({
@@ -246,15 +259,16 @@ describe('AiService', () => {
         title: expectedFallbackTitle,
       });
 
-      await service.generateQuiz(requestWithoutTitle as any, userId);
+      await service.generateQuiz(requestWithoutTitle, userId);
 
-      expect(mockDatabaseService.quiz.create).toHaveBeenCalledWith(
-          expect.objectContaining({
-            data: expect.objectContaining({
-              title: expectedFallbackTitle,
-            }),
-          })
-      );
+      expect(mockDatabaseService.quiz.create).toHaveBeenCalled();
+
+      const createMock = mockDatabaseService.quiz.create;
+      const createArgs = (createMock.mock.calls as unknown[][])[0][0] as {
+        data: { title: string };
+      };
+
+      expect(createArgs.data.title).toBe(expectedFallbackTitle);
     });
   });
 
@@ -274,7 +288,7 @@ describe('AiService', () => {
       mockDatabaseService.document.findUnique.mockResolvedValue(null);
 
       await expect(service.generateSummary(documentId, userId)).rejects.toThrow(
-          new NotFoundException('Document was not found or not ready.')
+        new NotFoundException('Document was not found or not ready.'),
       );
 
       expect(mockDatabaseService.document.findUnique).toHaveBeenCalledWith({
@@ -285,14 +299,17 @@ describe('AiService', () => {
     });
 
     it('should successfully generate and return the summary', async () => {
-
       mockDatabaseService.document.findUnique.mockResolvedValue(mockDocument);
 
-      (geminiService.generateSummary as jest.Mock).mockResolvedValue(mockSummaryText);
+      (geminiService.generateSummary as jest.Mock).mockResolvedValue(
+        mockSummaryText,
+      );
 
       const result = await service.generateSummary(documentId, userId);
 
-      expect(geminiService.generateSummary).toHaveBeenCalledWith(mockDocument.extractedText);
+      expect(geminiService.generateSummary).toHaveBeenCalledWith(
+        mockDocument.extractedText,
+      );
 
       expect(result).toEqual({
         documentId: mockDocument.id,
@@ -307,21 +324,19 @@ describe('AiService', () => {
     const documentId = 100;
     const request = {
       documentId,
-      question: "What is the main topic?",
+      question: 'What is the main topic?',
     };
 
     const mockDocument = {
       id: documentId,
       title: 'Teszt Dokumentum',
       chunks: [
-        { content: "Content 1", pageNumber: 1, chunkIndex: 1 },
-        { content: "Content 2", pageNumber: 2, chunkIndex: 2 },
+        { content: 'Content 1', pageNumber: 1, chunkIndex: 1 },
+        { content: 'Content 2', pageNumber: 2, chunkIndex: 2 },
       ],
     };
 
-    const mockRelevantChunks = [
-      { content: "Content 1", chunkIndex: 1 },
-    ];
+    const mockRelevantChunks = [{ content: 'Content 1', chunkIndex: 1 }];
     const chunkIndexes = [1];
 
     const mockChatHistory = {
@@ -336,7 +351,7 @@ describe('AiService', () => {
       mockDatabaseService.document.findUnique.mockResolvedValue(null);
 
       await expect(service.chat(request, userId)).rejects.toThrow(
-          new NotFoundException('Document was not found or not ready.')
+        new NotFoundException('Document was not found or not ready.'),
       );
 
       expect(mockDatabaseService.document.findUnique).toHaveBeenCalledWith({
@@ -350,12 +365,20 @@ describe('AiService', () => {
 
     it('should handle chat WITH existing chat history', async () => {
       mockDatabaseService.document.findUnique.mockResolvedValue(mockDocument);
-      (textChunker.findRelevantChunks as jest.Mock).mockReturnValue(mockRelevantChunks);
+      (textChunker.findRelevantChunks as jest.Mock).mockReturnValue(
+        mockRelevantChunks,
+      );
 
-      mockDatabaseService.chatHistory.findFirst.mockResolvedValue(mockChatHistory);
+      mockDatabaseService.chatHistory.findFirst.mockResolvedValue(
+        mockChatHistory,
+      );
 
-      (geminiService.chatWithContext as jest.Mock).mockResolvedValue(mockAiAnswer);
-      mockDatabaseService.chatHistory.update.mockResolvedValue({ id: mockChatHistory.id });
+      (geminiService.chatWithContext as jest.Mock).mockResolvedValue(
+        mockAiAnswer,
+      );
+      mockDatabaseService.chatHistory.update.mockResolvedValue({
+        id: mockChatHistory.id,
+      });
 
       const result = await service.chat(request, userId);
 
@@ -367,7 +390,11 @@ describe('AiService', () => {
           messages: {
             create: [
               { role: 'user', content: request.question, relevantChunks: [] },
-              { role: 'assistant', content: mockAiAnswer, relevantChunks: chunkIndexes },
+              {
+                role: 'assistant',
+                content: mockAiAnswer,
+                relevantChunks: chunkIndexes,
+              },
             ],
           },
         },
@@ -385,14 +412,20 @@ describe('AiService', () => {
     it('should create NEW chat history if none exists and handle chat', async () => {
       mockDatabaseService.document.findUnique.mockResolvedValue(mockDocument);
 
-      (textChunker.findRelevantChunks as jest.Mock).mockReturnValue(mockRelevantChunks);
+      (textChunker.findRelevantChunks as jest.Mock).mockReturnValue(
+        mockRelevantChunks,
+      );
 
       mockDatabaseService.chatHistory.findFirst.mockResolvedValue(null);
 
       mockDatabaseService.chatHistory.create.mockResolvedValue(mockChatHistory);
 
-      (geminiService.chatWithContext as jest.Mock).mockResolvedValue(mockAiAnswer);
-      mockDatabaseService.chatHistory.update.mockResolvedValue({ id: mockChatHistory.id });
+      (geminiService.chatWithContext as jest.Mock).mockResolvedValue(
+        mockAiAnswer,
+      );
+      mockDatabaseService.chatHistory.update.mockResolvedValue({
+        id: mockChatHistory.id,
+      });
 
       await service.chat(request, userId);
 
@@ -404,9 +437,9 @@ describe('AiService', () => {
       });
 
       expect(mockDatabaseService.chatHistory.update).toHaveBeenCalledWith(
-          expect.objectContaining({
-            where: { id: mockChatHistory.id }
-          })
+        expect.objectContaining({
+          where: { id: mockChatHistory.id },
+        }),
       );
     });
   });
@@ -440,7 +473,7 @@ describe('AiService', () => {
       mockDatabaseService.document.findUnique.mockResolvedValue(null);
 
       await expect(service.explainConcept(request, userId)).rejects.toThrow(
-          new NotFoundException('Document was not found or not ready.')
+        new NotFoundException('Document was not found or not ready.'),
       );
 
       expect(mockDatabaseService.document.findUnique).toHaveBeenCalledWith({
@@ -455,22 +488,26 @@ describe('AiService', () => {
     it('should successfully explain the concept based on relevant chunks', async () => {
       mockDatabaseService.document.findUnique.mockResolvedValue(mockDocument);
 
-      (textChunker.findRelevantChunks as jest.Mock).mockReturnValue(mockRelevantChunks);
+      (textChunker.findRelevantChunks as jest.Mock).mockReturnValue(
+        mockRelevantChunks,
+      );
 
-      (geminiService.explainConcept as jest.Mock).mockResolvedValue(mockAiExplanation);
+      (geminiService.explainConcept as jest.Mock).mockResolvedValue(
+        mockAiExplanation,
+      );
 
       const result = await service.explainConcept(request, userId);
 
       expect(textChunker.findRelevantChunks).toHaveBeenCalledWith(
-          mockDocument.chunks,
-          request.concept,
-          3
+        mockDocument.chunks,
+        request.concept,
+        3,
       );
 
       const expectedContext = 'Relevant Content 1\n\nRelevant Content 2';
       expect(geminiService.explainConcept).toHaveBeenCalledWith(
-          request.concept,
-          expectedContext
+        request.concept,
+        expectedContext,
       );
 
       expect(result).toEqual({
@@ -492,15 +529,23 @@ describe('AiService', () => {
     };
 
     const mockMessages = [
-      { role: 'user', content: 'What is this document about?', relevantChunks: [] },
-      { role: 'assistant', content: 'It is a test document.', relevantChunks: [1] },
+      {
+        role: 'user',
+        content: 'What is this document about?',
+        relevantChunks: [],
+      },
+      {
+        role: 'assistant',
+        content: 'It is a test document.',
+        relevantChunks: [1],
+      },
     ];
 
     it('should throw NotFoundException if document is not found or not ready', async () => {
       mockDatabaseService.document.findUnique.mockResolvedValue(null);
 
       await expect(service.getChatHistory(documentId, userId)).rejects.toThrow(
-          new NotFoundException('Document was not found or not ready.')
+        new NotFoundException('Document was not found or not ready.'),
       );
 
       expect(mockDatabaseService.document.findUnique).toHaveBeenCalledWith({

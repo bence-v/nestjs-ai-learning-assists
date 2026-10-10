@@ -4,8 +4,6 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
-import { Card } from '@prisma/client';
-import fs from 'fs/promises';
 
 @Injectable()
 export class FlashcardService {

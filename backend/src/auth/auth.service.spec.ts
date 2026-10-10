@@ -10,7 +10,7 @@ jest.mock('bcrypt');
 describe('AuthService', () => {
   let service: AuthService;
   let databaseService: DatabaseService;
-
+  
   const mockDatabaseService = {
     user: {
       update: jest.fn(),
@@ -99,7 +99,6 @@ describe('AuthService', () => {
     };
 
     it('should successfully change the password if current password is correct', async () => {
-
       mockDatabaseService.user.findUnique.mockResolvedValue(mockDbUser);
 
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
@@ -110,7 +109,10 @@ describe('AuthService', () => {
       const result = await service.changePassword(userId, dto);
 
       expect(bcrypt.hash).toHaveBeenCalledWith(dto.newPassword, 10);
-      expect(bcrypt.compare).toHaveBeenCalledWith(dto.currentPassword, mockDbUser.password);
+      expect(bcrypt.compare).toHaveBeenCalledWith(
+        dto.currentPassword,
+        mockDbUser.password,
+      );
 
       expect(mockDatabaseService.user.update).toHaveBeenCalledWith({
         where: { id: userId },
@@ -130,7 +132,9 @@ describe('AuthService', () => {
 
       const hashSpy = jest.spyOn(bcrypt, 'hash');
 
-      await expect(service.changePassword(userId, dto)).rejects.toThrow(UnauthorizedException);
+      await expect(service.changePassword(userId, dto)).rejects.toThrow(
+        UnauthorizedException,
+      );
 
       expect(hashSpy).not.toHaveBeenCalled();
       expect(mockDatabaseService.user.update).not.toHaveBeenCalled();
@@ -153,7 +157,6 @@ describe('AuthService', () => {
     };
 
     it('should successfully register a new user and return a token', async () => {
-
       mockDatabaseService.user.findFirst.mockResolvedValue(null);
 
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashed_password');
@@ -177,7 +180,7 @@ describe('AuthService', () => {
           email: dto.email,
           password: 'hashed_password',
         },
-        select: expect.any(Object),
+        select: expect.any(Object) as Record<string, boolean>,
       });
 
       expect(mockJwtService.sign).toHaveBeenCalledWith({
@@ -196,7 +199,6 @@ describe('AuthService', () => {
     });
 
     it('should throw BadRequestException if email is already registered', async () => {
-
       mockDatabaseService.user.findFirst.mockResolvedValue({
         email: dto.email,
         username: 'other_username',
@@ -205,14 +207,13 @@ describe('AuthService', () => {
       const createSpy = mockDatabaseService.user.create;
 
       await expect(service.register(dto)).rejects.toThrow(
-          new BadRequestException('Email already registered.')
+        new BadRequestException('Email already registered.'),
       );
 
       expect(createSpy).not.toHaveBeenCalled();
     });
 
     it('should throw BadRequestException if username is already taken', async () => {
-
       mockDatabaseService.user.findFirst.mockResolvedValue({
         email: 'different@gmail.com',
         username: dto.username,
@@ -221,7 +222,7 @@ describe('AuthService', () => {
       const createSpy = mockDatabaseService.user.create;
 
       await expect(service.register(dto)).rejects.toThrow(
-          new BadRequestException('Username already taken.')
+        new BadRequestException('Username already taken.'),
       );
 
       expect(createSpy).not.toHaveBeenCalled();
@@ -241,7 +242,6 @@ describe('AuthService', () => {
     };
 
     it('should return user data and token on successful login', async () => {
-
       mockDatabaseService.user.findUnique.mockResolvedValue(mockDbUser);
 
       jest.spyOn(bcrypt, 'compare').mockResolvedValue(true as never);
@@ -275,20 +275,18 @@ describe('AuthService', () => {
     });
 
     it('should throw UnauthorizedException if user is not found (wrong email)', async () => {
-
       mockDatabaseService.user.findUnique.mockResolvedValue(null);
 
       const compareSpy = jest.spyOn(bcrypt, 'compare');
 
       await expect(service.login(email, pass)).rejects.toThrow(
-          new UnauthorizedException('Invalid credentials!')
+        new UnauthorizedException('Invalid credentials!'),
       );
 
       expect(compareSpy).not.toHaveBeenCalled();
     });
 
     it('should throw UnauthorizedException if password does not match', async () => {
-
       mockDatabaseService.user.findUnique.mockResolvedValue(mockDbUser);
 
       jest.spyOn(bcrypt, 'compare').mockResolvedValue(false as never);
@@ -296,7 +294,7 @@ describe('AuthService', () => {
       const signSpy = mockJwtService.sign;
 
       await expect(service.login(email, pass)).rejects.toThrow(
-          new UnauthorizedException('Invalid credentials!')
+        new UnauthorizedException('Invalid credentials!'),
       );
 
       expect(signSpy).not.toHaveBeenCalled();

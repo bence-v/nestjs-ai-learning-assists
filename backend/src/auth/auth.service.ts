@@ -16,8 +16,8 @@ import { RegisterDto } from './params/RegisterDto';
 @Injectable()
 export class AuthService {
   constructor(
-      private databaseService: DatabaseService,
-      private jwtService: JwtService,
+    private databaseService: DatabaseService,
+    private jwtService: JwtService,
   ) {}
 
   async login(email: string, pass: string) {
@@ -50,8 +50,8 @@ export class AuthService {
   }
 
   async updateProfile(
-      userId: number,
-      updateData: UpdateProfileDto,
+    userId: number,
+    updateData: UpdateProfileDto,
   ): Promise<UpdateProfileResponse> {
     const updatedUser = await this.databaseService.user.update({
       where: {
@@ -114,9 +114,9 @@ export class AuthService {
 
     if (userExists) {
       const errorMessage =
-          userExists.email === dto.email
-              ? 'Email already registered.'
-              : 'Username already taken.';
+        userExists.email === dto.email
+          ? 'Email already registered.'
+          : 'Username already taken.';
 
       throw new BadRequestException(errorMessage);
     }
